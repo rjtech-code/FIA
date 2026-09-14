@@ -1,5 +1,3 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
@@ -8,13 +6,11 @@ import { env } from './config/env.js'
 import routes from './routes/index.js'
 import { notFound, errorHandler } from './middleware/errorHandler.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-// The built Vite SPA (../Frontend/dist relative to this repo's Backend/,
-// produced by `npm run build` inside Frontend/) — served directly by this
-// same process so the frontend and API share one origin in production.
-// This keeps `VITE_API_BASE_URL=/api` working unchanged.
-const DIST_DIR = path.join(__dirname, '../../Frontend/dist')
-
+// This backend is deployed standalone (e.g. on Render) — it does NOT serve
+// the frontend. The React/Vite app is deployed separately (e.g. on Vercel)
+// and talks to this API cross-origin via VITE_API_BASE_URL (see
+// Frontend/src/utils/constants.js). This process must never depend on a
+// Frontend/dist build existing on disk.
 const app = express()
 
 // Trust exactly `env.trustProxyHops` reverse-proxy hop(s) in front of this
@@ -51,22 +47,14 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' })
 })
 
-app.use('/api', routes)
-
-// Anything under /api that didn't match a route above is a real 404 (must
-// not fall through to the SPA fallback below).
-app.use('/api', notFound, errorHandler)
-
-// Serves the Vite build (repo-root `dist/`) for every non-API request —
-// requests for a real static file (JS/CSS/images) are served as-is; anything
-// else (e.g. `/teacher/dashboard`) falls through to `index.html` so
-// client-side routes survive a hard refresh.
-app.use(express.static(DIST_DIR))
-app.get(/.*/, (req, res, next) => {
-  res.sendFile(path.join(DIST_DIR, 'index.html'), (err) => {
-    if (err) next(err)
-  })
+// This backend is API-only — there is no frontend to serve here, so the
+// root route just confirms the process is up (e.g. for a quick manual
+// check), separate from /health above.
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'FIA Backend is running' })
 })
+
+app.use('/api', routes)
 
 app.use(notFound)
 app.use(errorHandler)
