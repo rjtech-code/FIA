@@ -7,96 +7,117 @@ and reporting (CSAT/ITP/NPS, exports) for AWS/Robotics/Music career tours.
 ## Architecture
 
 ```
-React/Vite Frontend  →  Cloudflare Worker (Hono)  →  Firebase Firestore
+React/Vite Frontend  →  Node.js / Express API  →  MongoDB
 ```
 
-One frontend, one backend. There is no Node/Express server and no MongoDB —
-both were fully replaced by the Cloudflare Worker + Firestore stack below
-(see [docs/MIGRATION.md](docs/MIGRATION.md) for how that migration happened).
+One frontend, one backend, kept as two independent projects in this repo.
 
 - **Frontend**: React (Vite), Tailwind CSS, React Router DOM, Axios
-- **Backend**: Cloudflare Workers, [Hono](https://hono.dev)
-- **Database**: Firebase Firestore, accessed via its REST API directly from
-  the Worker (no Admin SDK — Workers isolates can't run it)
-- **Auth**: JWT (HS256, via `jose`), passwords hashed with `bcryptjs`
+- **Backend**: Node.js, Express
+- **Database**: MongoDB, via Mongoose
+- **Auth**: JWT (HS256, via `jsonwebtoken`), passwords hashed with `bcryptjs`
 
 ## Project Structure
 
 ```
 FIA/
-├─ src/                        # Frontend (Vite React app)
-│  ├─ api/                     # Axios clients (admin + teacher, separate auth domains)
-│  ├─ components/               # Reusable UI primitives + branding
-│  ├─ context/, hooks/          # AuthContext/TeacherAuthContext + hooks
-│  ├─ features/                 # auth, home, schools, teacherAuth, teacherPortal, ...
-│  ├─ routes/                   # AppRoutes, ProtectedRoute, GuestRoute
-│  └─ utils/                    # constants (single API_BASE_URL source), tokenStorage
-│
-├─ worker/                     # THE backend — Cloudflare Worker
+├─ Frontend/                   # React (Vite) app
 │  ├─ src/
-│  │  ├─ routes/, controllers/, services/, repositories/   # REST API layers
-│  │  ├─ firestore/            # REST client, codec, OAuth token minting
-│  │  ├─ auth/                 # JWT sign/verify, bcrypt
-│  │  ├─ middleware/           # authenticate, CORS/error handling, rate limiting
-│  │  ├─ durable-objects/      # RateLimiter (per-identifier login throttling)
-│  │  └─ env.ts, index.ts, types.ts
-│  ├─ package.json, tsconfig.json, wrangler.jsonc
-│  └─ .dev.vars                # local secrets (gitignored) — see .dev.vars.example
+│  │  ├─ api/                  # Axios clients (admin + teacher, separate auth domains)
+│  │  ├─ components/            # Reusable UI primitives + branding
+│  │  ├─ context/, hooks/       # AuthContext/TeacherAuthContext + hooks
+│  │  ├─ features/              # auth, home, schools, teacherAuth, teacherPortal, ...
+│  │  ├─ routes/                # AppRoutes, ProtectedRoute, GuestRoute
+│  │  └─ utils/                 # constants (single API_BASE_URL source), tokenStorage
+│  ├─ public/
+│  ├─ index.html, vite.config.js, eslint.config.js, vercel.json
+│  ├─ package.json, package-lock.json, .npmrc
+│  └─ .env                      # local config (gitignored) — see Environment Variables below
 │
-├─ docs/MIGRATION.md           # history of the Express/Mongo -> Worker/Firestore migration
-├─ firestore.rules, firestore.indexes.json
-├─ .env.development / .env.production / .env.example
-└─ vite.config.js, vercel.json
+├─ Backend/                    # Node.js / Express API
+│  ├─ src/
+│  │  ├─ routes/, controllers/, services/   # REST API layers
+│  │  ├─ models/                # Mongoose schemas
+│  │  ├─ config/                 # env.js (config from process.env), db.js (Mongo connection)
+│  │  ├─ middleware/             # authenticate, CORS/error handling, rate limiting
+│  │  ├─ utils/                  # CSAT/ITP/NPS, student dummy ID, exports, etc.
+│  │  └─ app.js, server.js       # Express app + process entrypoint
+│  ├─ scripts/                   # one-off/maintenance scripts (super admin seed, etc.)
+│  ├─ package.json, package-lock.json
+│  └─ .env                      # local secrets (gitignored) — see Environment Variables below
+│
+├─ .gitignore
+└─ README.md
 ```
 
 ## Getting Started (local development)
 
-Local dev runs **three** processes:
+Local dev runs **two** processes:
 
 ```bash
-# 1. Firestore Emulator (no real Firebase project needed)
-firebase emulators:start --only firestore
-
-# 2. Cloudflare Worker (reads worker/.dev.vars for local secrets)
-cd worker
-cp .dev.vars.example .dev.vars   # then fill in values — see comments in that file
+# 1. Backend
+cd Backend
 npm install
-npm run dev                       # http://127.0.0.1:8787
+npm run dev                       # http://127.0.0.1:5000
 
-# 3. Frontend
-cd ..
+# 2. Frontend
+cd Frontend
 npm install
 npm run dev                       # http://localhost:5173
 ```
 
 Open `http://localhost:5173/` — this is the Super Admin login page.
-`.env.development` already points the frontend at `http://127.0.0.1:8787/api`;
-`.env.production` (used by `vite build`) points it at same-origin `/api`
-instead, since the deployed Worker serves both the built SPA and the API
-from one Cloudflare deployment — see `src/utils/constants.js`, the single
-place `VITE_API_BASE_URL` is read.
+`Frontend/.env`'s `VITE_API_BASE_URL` points the frontend at the local
+backend (`http://127.0.0.1:5000/api`) — see `Frontend/src/utils/constants.js`,
+the single place `VITE_API_BASE_URL` is read, for the exact fallback rules
+and how this changes for a separately-deployed production frontend.
 
-On first request, the Worker automatically creates the default Super Admin
-account if it doesn't already exist (idempotent):
+On startup, the backend automatically creates the default Super Admin
+account if it doesn't already exist (idempotent) — see `SUPER_ADMIN_LOGIN_ID`
+/ `SUPER_ADMIN_PASSWORD` in Environment Variables below.
 
-- Login ID: `fia@admin.com`
-- Password: `fia@123`
+## Environment Variables
 
-These come from `SUPER_ADMIN_LOGIN_ID` (wrangler.jsonc) / `SUPER_ADMIN_PASSWORD`
-(`worker/.dev.vars` locally, a `wrangler secret` in production).
+Each app has exactly **one** environment file, never committed:
+`Frontend/.env` and `Backend/.env`. Copy the tables below to create them
+locally (see the inline comments in each file, once created, for more
+detail).
+
+**`Frontend/.env`**
+
+| Variable | Purpose |
+|---|---|
+| `VITE_API_BASE_URL` | Base URL the frontend calls the backend at, e.g. `http://127.0.0.1:5000/api` locally |
+
+**`Backend/.env`**
+
+| Variable | Purpose |
+|---|---|
+| `NODE_ENV` | `development` / `production` — controls error-message masking |
+| `PORT` | Port the Express server listens on (default `5000`) |
+| `TRUST_PROXY_HOPS` | Reverse-proxy hops in front of this process (Express `trust proxy`) |
+| `CLIENT_ORIGIN` | Comma-separated allowed frontend origin(s) for CORS |
+| `MONGO_URI` | MongoDB connection string |
+| `JWT_SECRET` | Secret used to sign/verify auth JWTs |
+| `JWT_EXPIRES_IN` | Normal session expiry (e.g. `1d`) |
+| `JWT_EXPIRES_IN_REMEMBER_ME` | "Remember Me" session expiry (e.g. `30d`) |
+| `SUPER_ADMIN_LOGIN_ID` | Login ID for the auto-seeded default Super Admin |
+| `SUPER_ADMIN_PASSWORD` | Password for the auto-seeded default Super Admin |
 
 ## Deploying
 
 ```bash
-npm run build                 # vite build -> dist/
-npm run worker:typecheck      # cd worker && tsc --noEmit
-npm run worker:deploy:dry-run # cd worker && wrangler deploy --dry-run
-npm run deploy                # vite build && wrangler deploy (from worker/)
+cd Frontend && npm run build   # -> Frontend/dist/
+cd ../Backend && npm start     # serves Frontend/dist/ + the API from one process
 ```
 
-`wrangler.jsonc`'s `vars.FIREBASE_PROJECT_ID` must always match the real,
-live Firebase project — see the comment on that field before ever changing
-it.
+For a standalone VPS deployment (e.g. Hostinger KVM): build the frontend,
+copy `Frontend/dist/` and the `Backend/` folder to the server, set the real
+environment variables for that environment (`Backend/.env` or your host's
+own env-var settings), and run `npm start` inside `Backend/` — ideally under
+a process manager such as PM2 or systemd. The frontend can also be deployed
+separately (e.g. to Vercel) — in that case set `Frontend/.env`'s
+`VITE_API_BASE_URL` to the backend's real URL before building.
 
 ## Auth Flow Summary
 
@@ -109,7 +130,7 @@ it.
 - Both **Remember Me** on and off store the token in `localStorage` (so
   every tab shares one session) — what actually differs is the JWT's expiry
   (`JWT_EXPIRES_IN` vs `JWT_EXPIRES_IN_REMEMBER_ME`) and a 30-hour
-  inactivity timeout tracked client-side (see `src/utils/authSession.js`)
+  inactivity timeout tracked client-side (see `Frontend/src/utils/authSession.js`)
 - On app load, `AuthProvider` looks for a stored token and calls `/api/auth/me`
   to validate it before deciding whether to treat the user as authenticated
 - The frontend `ProtectedRoute` redirects unauthenticated users to `/`;

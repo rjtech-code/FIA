@@ -12,15 +12,10 @@ node_modules
 dist
 dist-ssr
 *.local
-.env
-.env.local
-.env.*.local
 
-# Cloudflare Worker local dev — contains real Firebase service-account
-# credentials/JWT secret when testing against a real project; must never be
-# committed (see docs/MIGRATION.md §7).
-worker/.dev.vars
-worker/.wrangler
+# Exactly one .env per app (Frontend/.env, Backend/.env) — real secrets,
+# never committed.
+.env
 
 # Editor directories and files
 .vscode/*
