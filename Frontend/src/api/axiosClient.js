@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { API_BASE_URL, AUTH_UNAUTHORIZED_EVENT } from '../utils/constants'
 import { getStoredToken, clearStoredToken, touchActivity } from '../utils/tokenStorage'
+import { tryLocalFallback } from '../utils/apiFallback'
 
 const axiosClient = axios.create({
   baseURL: API_BASE_URL,
@@ -25,7 +26,13 @@ axiosClient.interceptors.response.use(
     touchActivity()
     return response
   },
-  (error) => {
+  async (error) => {
+    // Only steps in on a real connectivity failure against the production
+    // backend (no response at all) — never for an ordinary 401/4xx/5xx, so
+    // this can never mask/replace the 401 handling below.
+    const fallbackResponse = await tryLocalFallback(axiosClient, error)
+    if (fallbackResponse) return fallbackResponse
+
     if (error?.response?.status === 401) {
       clearStoredToken()
       window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT))

@@ -17,20 +17,27 @@ export const TEACHER_ROUTES = {
 // (see src/api/*Client.js) imports this; nothing else decides the base URL.
 //
 // - `VITE_API_BASE_URL` (from Frontend/.env) always wins when set — this is
-//   how a separately-domained production API or a non-default local port
-//   gets configured.
+//   the production backend (https://fia-yznm.onrender.com/api) by default,
+//   so production is always the FIRST choice, in every environment.
 // - Otherwise, `import.meta.env.DEV` (true under `vite`/`vite dev`, false in
 //   a `vite build`) picks a safe, environment-correct default:
 //     dev  -> http://127.0.0.1:5000/api (the local Node/Express server, see
 //             Backend/src/server.js)
-//     prod -> /api (same-origin — the Node/Express server serves both the
-//             SPA and the API from one process, see Backend/src/app.js)
+//     prod -> /api (same-origin — for a deployment where the Node/Express
+//             server also serves the built SPA itself, see Backend/src/app.js)
 // This guarantees a missing env var NEVER silently points a local dev
 // server at production (or vice versa) — a fallback hardcoding the
 // production URL here would mean a fresh clone with no Frontend/.env set up
 // yet could have `npm run dev` call production by accident.
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://127.0.0.1:5000/api' : '/api')
+
+// Local backend fallback target — see src/utils/apiFallback.js. Only ever
+// used automatically when a request against API_BASE_URL fails with a real
+// connectivity error (no HTTP response at all: DNS failure, connection
+// refused, timed out, blocked by CORS), never for an ordinary 4xx/5xx
+// response (the server IS reachable in that case, just returning an error).
+export const LOCAL_API_BASE_URL = 'http://localhost:5000/api'
 
 export const AUTH_UNAUTHORIZED_EVENT = 'auth:unauthorized'
 export const TEACHER_AUTH_UNAUTHORIZED_EVENT = 'teacherAuth:unauthorized'
