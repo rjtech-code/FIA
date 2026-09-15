@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TextInput from '../../../components/ui/TextInput'
+import Select from '../../../components/ui/Select'
 import Button from '../../../components/ui/Button'
 import Skeleton from '../../../components/ui/Skeleton'
 import WorkflowStepper from '../../../components/ui/WorkflowStepper'
@@ -14,6 +15,11 @@ import { getApiErrorMessage } from '../../../utils/apiErrorMessage'
 import { TEACHER_ROUTES } from '../../../utils/constants'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Teacher may submit feedback for ANY grade 6-12 — not restricted to their
+// own assigned class — so this is a fixed list, independent of the
+// school's actual active grades (unlike Student Feedback's grade dropdown).
+const GRADE_OPTIONS = ['6', '7', '8', '9', '10', '11', '12']
 
 // The 5 mandatory questions per Career Tour (matches the official Form 4
 // spec) — Career Tour language is a separate, always-required field and
@@ -60,6 +66,11 @@ function SubmittedSummary({ submissions, t }) {
             {first.email && (
               <p className="mt-1">
                 <span className="font-semibold text-accent-300">{t('teacherFeedback.email')}</span> {first.email}
+              </p>
+            )}
+            {first.grade && (
+              <p className="mt-1">
+                <span className="font-semibold text-accent-300">{t('teacherFeedback.gradeLabel')}</span> {first.grade}
               </p>
             )}
             <p className="mt-1">
@@ -134,6 +145,7 @@ export default function TeacherFeedbackPage() {
   const [submittedBy, setSubmittedBy] = useState('')
   const [contactNumber, setContactNumber] = useState('')
   const [email, setEmail] = useState('')
+  const [grade, setGrade] = useState('')
   const [answers, setAnswers] = useState({})
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -172,6 +184,8 @@ export default function TeacherFeedbackPage() {
       nextErrors.email = t('teacherFeedback.emailInvalid')
     }
 
+    if (!grade) nextErrors.grade = t('teacherFeedback.gradeRequired')
+
     meta.tours.forEach((tour) => {
       const value = answers[tour.tourId] || {}
       const tourErrors = {}
@@ -192,10 +206,10 @@ export default function TeacherFeedbackPage() {
   const liveErrors = useMemo(
     () => validate(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [submittedBy, email, answers, meta.tours],
+    [submittedBy, email, grade, answers, meta.tours],
   )
   const hasLiveTourErrors = Object.values(liveErrors.tours).some((tourErrors) => Object.keys(tourErrors).length > 0)
-  const isFormComplete = !liveErrors.submittedBy && !liveErrors.email && !hasLiveTourErrors
+  const isFormComplete = !liveErrors.submittedBy && !liveErrors.email && !liveErrors.grade && !hasLiveTourErrors
 
   const { filledCount, totalCount, progressPercent } = useMemo(() => {
     const total = meta.tours.length * QUESTION_KEYS.length
@@ -215,7 +229,7 @@ export default function TeacherFeedbackPage() {
     const nextErrors = validate()
     const hasTourErrors = Object.values(nextErrors.tours).some((e) => Object.keys(e).length > 0)
     setErrors(nextErrors)
-    if (nextErrors.submittedBy || nextErrors.email || hasTourErrors) return
+    if (nextErrors.submittedBy || nextErrors.email || nextErrors.grade || hasTourErrors) return
 
     setIsSubmitting(true)
     try {
@@ -223,6 +237,7 @@ export default function TeacherFeedbackPage() {
         submittedBy: submittedBy.trim(),
         contactNumber: contactNumber.trim(),
         email: email.trim().toLowerCase(),
+        grade,
         tours: meta.tours.map((tour) => ({ tourId: tour.tourId, ...answers[tour.tourId] })),
       }
       const { data } = await submitTeacherFeedback(payload)
@@ -281,6 +296,15 @@ export default function TeacherFeedbackPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               error={errors.email}
+            />
+            <Select
+              id="grade"
+              label={t('teacherFeedback.gradeLabel')}
+              placeholder={t('teacherFeedback.gradePlaceholder')}
+              options={GRADE_OPTIONS.map((value) => ({ value, label: value }))}
+              value={grade}
+              onChange={(event) => setGrade(event.target.value)}
+              error={errors.grade}
             />
           </div>
 

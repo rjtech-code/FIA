@@ -43,11 +43,10 @@ export function computeSchoolOverallStatus(status) {
 // dashboard already uses (see src/data/schoolRecords.derive.js's
 // computeLastActivity on the frontend) to show "Last Activity" for a
 // school: the latest createdAt across every StudentFeedbackBatch,
-// StudentFeedback, and TeacherFeedback document belonging to it. Used by
-// the AFE CSV (Official) export as completion_date/submission_date — but
-// ONLY once the school has actually reached Completed (callers must gate
-// on computeSchoolOverallStatus() themselves; this function just finds the
-// date, it doesn't know about completion).
+// StudentFeedback, and TeacherFeedback document belonging to it. NOTE: the
+// AFE CSV (Official) export's completion_date/submission_date no longer
+// uses this — that now uses the school's FIRST StudentFeedback submission
+// date (see afeExport.service.js), not the last activity date.
 export function getSchoolLastActivityDate({ batchDocs = [], studentDocs = [], teacherDocs = [] }) {
   const dates = [...batchDocs, ...studentDocs, ...teacherDocs]
     .map((doc) => doc.createdAt)

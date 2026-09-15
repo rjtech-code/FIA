@@ -92,6 +92,14 @@ export async function createTour(superAdminId, { tourName, durationMinutes, pass
     throw new ApiError(400, 'Tour Duration must be a positive whole number of minutes.')
   }
 
+  const existing = await Tour.findOne({
+    deletedAt: null,
+    tourName: { $regex: `^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
+  })
+  if (existing) {
+    throw new ApiError(409, 'A tour with this name already exists.')
+  }
+
   const code = await getNextTourCode()
   const tourId = `CT-L-CUSTOM-${code}`
 

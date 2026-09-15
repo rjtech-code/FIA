@@ -29,3 +29,26 @@ export async function getSchoolById(schoolId) {
   }
   return school
 }
+
+// Re-verified server-side against the DB every time — never trust a
+// frontend-only UDISE check. The JWT (req.schoolId) already scopes this to
+// the logged-in teacher's own school; this step is a re-authentication
+// confirmation the product requires before any password change, not the
+// security boundary itself.
+async function assertUdiseMatchesSchool(schoolId, udise) {
+  const school = await getSchoolById(schoolId)
+  if (String(udise).trim() !== school.udise) {
+    throw new ApiError(400, 'Invalid UDISE')
+  }
+  return school
+}
+
+export async function verifyUdiseForPasswordChange(schoolId, udise) {
+  await assertUdiseMatchesSchool(schoolId, udise)
+}
+
+export async function changeTeacherPassword(schoolId, udise, newPassword) {
+  const school = await assertUdiseMatchesSchool(schoolId, udise)
+  school.customPassword = newPassword
+  await school.save()
+}

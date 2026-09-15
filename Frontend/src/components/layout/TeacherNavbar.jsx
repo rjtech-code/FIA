@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import FiaLogo from '../branding/FiaLogo'
 import LanguageSwitcher from '../ui/LanguageSwitcher'
+import ChangePasswordModal from '../../features/teacherDashboard/components/ChangePasswordModal'
 import { useTeacherAuth } from '../../hooks/useTeacherAuth'
 import { useTeacherStatus } from '../../hooks/useTeacherStatus'
 import { useLanguage } from '../../hooks/useLanguage'
@@ -30,6 +31,32 @@ function LogoutIcon({ className = 'h-4 w-4' }) {
       <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  )
+}
+
+function KeyIcon({ className = 'h-4 w-4' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <circle cx="8" cy="15" r="3.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M10.5 12.5L20 3m0 0h-4m4 0v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function ChangePasswordButton({ className = '', onClick, label }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600
+        transition-all duration-200 ease-out
+        hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
+        ${className}`}
+    >
+      <KeyIcon />
+      <span>{label}</span>
+    </button>
   )
 }
 
@@ -124,6 +151,7 @@ export default function TeacherNavbar() {
   const { status } = useTeacherStatus()
   const { t } = useLanguage()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
 
   const workflowSteps = [
     {
@@ -183,6 +211,7 @@ export default function TeacherNavbar() {
 
           <div className="hidden items-center gap-3 md:flex">
             <LanguageSwitcher />
+            <ChangePasswordButton onClick={() => setIsChangePasswordOpen(true)} label={t('nav.changePassword')} />
             <LogoutButton onClick={handleLogout} label={t('nav.logout')} />
           </div>
 
@@ -240,9 +269,19 @@ export default function TeacherNavbar() {
 
         <div className="flex flex-col gap-3 border-t border-slate-200 p-4">
           <LanguageSwitcher className="w-full justify-center" />
+          <ChangePasswordButton
+            onClick={() => {
+              closeDrawer()
+              setIsChangePasswordOpen(true)
+            }}
+            label={t('nav.changePassword')}
+            className="w-full"
+          />
           <LogoutButton onClick={handleLogout} label={t('nav.logout')} className="w-full" />
         </div>
       </div>
+
+      <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
     </>
   )
 }

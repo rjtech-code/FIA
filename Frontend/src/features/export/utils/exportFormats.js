@@ -104,14 +104,15 @@ function sortSchoolsForExport(schools) {
 }
 
 // The Teacher Feedback export/file displays the teacher's original 0-10
-// recommendScore rating +1 (e.g. 8 -> 9) — a display-only transformation for
-// this export specifically, per client requirement. Capped at 10 so the
-// already-maximum rating (10) doesn't produce an out-of-scale 11. This must
-// NOT touch the underlying stored TeacherFeedback.recommendScore (which stays
-// the teacher's original raw rating everywhere else, including the AFE CSV
-// (Official) export's educator_nps — see Backend/src/services/afeExport.service.js).
+// recommendScore rating +1 (e.g. 8 -> 9, 10 -> 11) — a display-only
+// transformation for this export specifically, per client requirement.
+// Deliberately NOT clamped back to 10 — a teacher who entered the maximum
+// (10) must show as 11 here, per spec. This must NOT touch the underlying
+// stored TeacherFeedback.recommendScore (which stays the teacher's original
+// raw rating everywhere else, including the AFE CSV (Official) export's
+// educator_nps — see Backend/src/services/afeExport.service.js).
 function displayTeacherRecommendScore(recommendScore) {
-  return typeof recommendScore === 'number' ? Math.min(recommendScore + 1, 10) : recommendScore
+  return typeof recommendScore === 'number' ? recommendScore + 1 : recommendScore
 }
 
 // District Code comes straight from the school's own backend-saved value
@@ -192,10 +193,10 @@ export function buildFeedbackRows(schools, setup, unit, range, dynamicCodeMap) {
           'School Name': school.schoolName,
           State: school.state,
           District: school.district,
-          Grade: '',
+          Grade: row.grade || '',
           'Unit (Student/Teacher)': 2,
           'Student Dummy Id or Teacher Email': row.email || '',
-          'Which Career Tour are you giving feedback on?': getCareerTourExportCode(row.tourId),
+          'Which Career Tour are you giving feedback on?': getCareerTourExportCode(row.tourId, dynamicCodeMap),
           'In which language did you watch the Career Tour?': FIXED_FEEDBACK_LANGUAGE_CODE,
           "How much did you enjoy this Career Tour? (1 =Didn't like it at all to 5 = Loved it)": '',
           'Please rate your overall experience of the tour (1 = Very Poor to 5 = Excellent)': '',

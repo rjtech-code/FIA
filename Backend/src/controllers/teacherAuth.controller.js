@@ -1,4 +1,9 @@
-import { authenticateSchoolLogin, getSchoolById } from '../services/teacherAuth.service.js'
+import {
+  authenticateSchoolLogin,
+  getSchoolById,
+  verifyUdiseForPasswordChange,
+  changeTeacherPassword,
+} from '../services/teacherAuth.service.js'
 import { generateAuthToken } from '../utils/generateToken.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { sendSuccess } from '../utils/ApiResponse.js'
@@ -34,4 +39,27 @@ export const teacherLogout = asyncHandler(async (_req, res) => {
 export const getCurrentSchool = asyncHandler(async (req, res) => {
   const school = await getSchoolById(req.schoolId)
   sendSuccess(res, { message: 'Session valid', data: school.toSafeJSON() })
+})
+
+export const verifyUdiseForPasswordChangeHandler = asyncHandler(async (req, res) => {
+  const { udise } = req.body
+  if (!udise || !String(udise).trim()) {
+    throw new ApiError(400, 'UDISE is required')
+  }
+
+  await verifyUdiseForPasswordChange(req.schoolId, udise)
+  sendSuccess(res, { message: 'UDISE verified' })
+})
+
+export const changeTeacherPasswordHandler = asyncHandler(async (req, res) => {
+  const { udise, newPassword } = req.body
+  if (!udise || !String(udise).trim()) {
+    throw new ApiError(400, 'UDISE is required')
+  }
+  if (!newPassword || String(newPassword).length < 6) {
+    throw new ApiError(400, 'Password must be at least 6 characters')
+  }
+
+  await changeTeacherPassword(req.schoolId, udise, newPassword)
+  sendSuccess(res, { message: 'Password changed successfully' })
 })

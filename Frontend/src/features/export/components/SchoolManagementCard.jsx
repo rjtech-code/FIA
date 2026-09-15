@@ -1,13 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import DashboardTable from '../../../components/table/DashboardTable'
 import Spinner from '../../../components/ui/Spinner'
 import AlertPopup from '../../../components/ui/AlertPopup'
 import { downloadSchoolListTemplate } from '../utils/schoolListExcel'
 import { fetchSchoolsRequest, uploadSchoolListRequest } from '../../../api/schools.api'
 import { useLanguage } from '../../../hooks/useLanguage'
-import UploadSchoolListModal from './UploadSchoolListModal'
 import UploadProgressModal from './UploadProgressModal'
 import UploadSummaryModal from './UploadSummaryModal'
+
+const ACCEPTED_EXTENSION = '.xlsx'
+const ACCEPTED_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+function isValidExcelFile(file) {
+  const nameIsXlsx = file.name.toLowerCase().endsWith(ACCEPTED_EXTENSION)
+  const mimeIsXlsx = !file.type || file.type === ACCEPTED_MIME
+  return nameIsXlsx && mimeIsXlsx
+}
 
 function DownloadIcon({ className = 'h-4 w-4' }) {
   return (
@@ -42,7 +50,7 @@ export default function SchoolManagementCard({ directoryVersion, onDirectoryChan
   const [backendSchools, setBackendSchools] = useState(null)
   const isBackendLoading = backendSchools === null
 
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+  const fileInputRef = useRef(null)
   const [uploadAttemptId, setUploadAttemptId] = useState(0)
   const [progressState, setProgressState] = useState(null)
   const [summaryData, setSummaryData] = useState(null)
@@ -50,7 +58,6 @@ export default function SchoolManagementCard({ directoryVersion, onDirectoryChan
   const [invalidFilePopup, setInvalidFilePopup] = useState(false)
   const [missingColumnsPopup, setMissingColumnsPopup] = useState(null)
   const [genericErrorPopup, setGenericErrorPopup] = useState(null)
-  const [lastUploadedSignature, setLastUploadedSignature] = useState(null)
 
   const columns = [
     { key: 'udise', label: t('export.schoolManagement.columns.udise'), sortable: true },
@@ -104,12 +111,10 @@ export default function SchoolManagementCard({ directoryVersion, onDirectoryChan
       const { data } = await uploadSchoolListRequest(file)
       const summary = data.data
 
-      setLastUploadedSignature({ name: file.name, size: file.size, lastModified: file.lastModified })
       setProgressState({ isComplete: true })
 
       setTimeout(() => {
         setProgressState(null)
-        setIsUploadModalOpen(false)
         if (summary.total === 1) {
           showSingleResultPopup(summary.results[0])
         } else {
@@ -153,13 +158,29 @@ export default function SchoolManagementCard({ directoryVersion, onDirectoryChan
           </button>
           <button
             type="button"
-            onClick={() => setIsUploadModalOpen(true)}
+            onClick={() => fileInputRef.current?.click()}
             className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white
               transition-all duration-200 ease-out hover:bg-brand-700 hover:shadow-md hover:shadow-brand-900/20"
           >
             <UploadIcon />
             {t('export.schoolManagement.uploadSchoolList')}
           </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (!file) return
+              if (!isValidExcelFile(file)) {
+                setInvalidFilePopup(true)
+                return
+              }
+              handleConfirmUpload(file)
+            }}
+          />
         </div>
       </div>
 
@@ -194,14 +215,6 @@ export default function SchoolManagementCard({ directoryVersion, onDirectoryChan
           />
         )}
       </div>
-
-      <UploadSchoolListModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        onInvalidFile={() => setInvalidFilePopup(true)}
-        onConfirmUpload={handleConfirmUpload}
-        lastUploadedSignature={lastUploadedSignature}
-      />
 
       <UploadProgressModal
         key={uploadAttemptId}

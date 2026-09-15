@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import * as XLSX from 'xlsx'
 import Spinner from '../../../components/ui/Spinner'
 import ErrorState from '../../../components/ui/ErrorState'
 import TablePagination from '../../../components/table/TablePagination'
@@ -17,7 +16,7 @@ import {
   isCellMissing,
 } from '../utils/exportFormats'
 import { buildDynamicTourCodeMap } from '../utils/exportMappings'
-import { fetchAfeOfficialPreview, downloadAfeOfficialCsv, normalizeBlobError } from '../utils/afeOfficialExport'
+import { fetchAfeOfficialPreview, downloadAfeOfficialCsv } from '../utils/afeOfficialExport'
 import { getApiErrorMessage } from '../../../utils/apiErrorMessage'
 import { getMonthlyCyclePresets, formatDateForInput, parseDateFromInput } from '../utils/dateRangeCycles'
 import { SCHOOL_DATA_CHANGED_EVENT } from '../../../utils/constants'
@@ -36,8 +35,6 @@ const TEAL_BUTTON =
   'inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-brand-700 hover:shadow-md hover:shadow-brand-900/20'
 const OUTLINE_BUTTON =
   'inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-60'
-const PRIMARY_CTA_BUTTON =
-  'inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-brand-700 hover:shadow-lg hover:shadow-brand-900/25 disabled:cursor-not-allowed disabled:opacity-60'
 const PRESET_BUTTON =
   'rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-all duration-150 ease-out hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700'
 const DATE_INPUT =
@@ -218,34 +215,6 @@ export default function ExportPreviewCard({ directoryVersion }) {
     }
   }
 
-  // The final exported workbook — exactly 3 sheets (Teacher Feedback,
-  // Student Feedback, AFE CSV), in that order, no other sheet. The AFE sheet
-  // always fetches a fresh copy from the backend so the workbook can never
-  // ship a stale AFE dataset alongside current Feedback sheets.
-  const handleDownloadWorkbook = async () => {
-    setAfeDownloadStatus('preparing')
-    setAfeDownloadError(null)
-    try {
-      const freshAfeData = await fetchAfeOfficialPreview()
-      const workbook = XLSX.utils.book_new()
-      ;[
-        { name: 'Teacher Feedback', columns: TEACHER_FEEDBACK_COLUMNS, rows: feedbackRowsByTab.teacherFeedback },
-        { name: 'Student Feedback', columns: STUDENT_FEEDBACK_COLUMNS, rows: feedbackRowsByTab.studentFeedback },
-        { name: 'AFE CSV', columns: freshAfeData.columns, rows: freshAfeData.rows },
-      ].forEach(({ name, columns, rows }) => {
-        const worksheet = XLSX.utils.json_to_sheet(rows, { header: columns })
-        XLSX.utils.book_append_sheet(workbook, worksheet, name)
-      })
-      XLSX.writeFile(workbook, 'fia-export.xlsx')
-      setAfeDownloadStatus('ready')
-      setTimeout(() => setAfeDownloadStatus('idle'), 2500)
-    } catch (err) {
-      setAfeDownloadStatus('error')
-      const normalized = await normalizeBlobError(err)
-      setAfeDownloadError(getApiErrorMessage(normalized, t('export.exportPreview.afeDownloadError')))
-    }
-  }
-
   const hasActiveRange = Boolean(range.start || range.end)
   const isPreviewTableVisible =
     activeTab === 'afe' ? !isAfeLoading && !afeError : !isLoading && !error
@@ -285,14 +254,6 @@ export default function ExportPreviewCard({ directoryVersion }) {
           className={OUTLINE_BUTTON}
         >
           <DownloadIcon /> {t('export.exportPreview.afeCsv')}
-        </button>
-        <button
-          type="button"
-          onClick={handleDownloadWorkbook}
-          disabled={afeDownloadStatus === 'preparing'}
-          className={PRIMARY_CTA_BUTTON}
-        >
-          <DownloadIcon className="h-4 w-4" /> {t('export.exportPreview.downloadAll')}
         </button>
 
         {afeDownloadStatus === 'preparing' && (

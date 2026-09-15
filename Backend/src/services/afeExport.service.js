@@ -21,14 +21,7 @@ import { StudentFeedback } from '../models/studentFeedback.model.js'
 import { TeacherFeedback } from '../models/teacherFeedback.model.js'
 import { sortBySchoolName } from '../utils/feedbackSort.js'
 import { getMonthNumber } from '../utils/academicPeriod.js'
-import { computeGradeFeedbackProgressFromDocs, getSchoolStatusFromProgress } from './teacherStatus.service.js'
-import { getTargetPercentMap, DEFAULT_STUDENT_FEEDBACK_TARGET_PERCENT } from './districtFeedbackTarget.service.js'
-import {
-  computeSchoolOverallStatus,
-  getSchoolLastActivityDate,
-  REQUIRED_GRADES,
-  SCHOOL_STATUS,
-} from './schoolStatus.service.js'
+import { REQUIRED_GRADES } from './schoolStatus.service.js'
 import { AFE_OFFICIAL_COLUMNS, AFE_ALWAYS_EMPTY_COLUMNS } from '../constants/afeOfficialColumns.js'
 import { calculateCsat } from '../utils/csat.js'
 import { calculateItp } from '../utils/itp.js'
@@ -161,14 +154,11 @@ function buildSharedRowFields({ school, tourMeta, unitType, completionDate, subm
 // TeacherFeedback, each unfiltered + `.lean()`), regardless of how many
 // schools exist — no N+1, no repeated per-school lookups.
 export async function buildAfeOfficialRows() {
-  const [schools, allBatches, allStudentFeedback, allTeacherFeedback, targetPercentByDistrict] = await Promise.all([
+  const [schools, allBatches, allStudentFeedback, allTeacherFeedback] = await Promise.all([
     School.find().lean(),
     StudentFeedbackBatch.find().lean(),
     StudentFeedback.find().lean(),
     TeacherFeedback.find().lean(),
-    // One query for every configured district, instead of one findOne() per
-    // school below — this export can cover every school in the program.
-    getTargetPercentMap(),
   ])
 
   const batchesBySchool = groupBySchool(allBatches)
@@ -189,24 +179,19 @@ export async function buildAfeOfficialRows() {
     // standalone Teacher block.)
     if (studentDocs.length === 0) return
 
-    // Only affects the internal "is this school/grade done" determination
-    // used below for completion_date — never any exported column value
-    // (response_rate_percentage stays the client-mandated fixed
-    // AFE_RESPONSE_RATE_PERCENTAGE regardless — see below).
-    const targetPercent = targetPercentByDistrict.get(school.district) ?? DEFAULT_STUDENT_FEEDBACK_TARGET_PERCENT
-    const gradeProgress = computeGradeFeedbackProgressFromDocs(
-      batchDocs,
-      studentDocs.map((doc) => ({ grade: doc.grade })),
-      targetPercent,
-    )
-    const status = getSchoolStatusFromProgress(teacherDocs.length, gradeProgress)
-    const isCompleted = computeSchoolOverallStatus(status) === SCHOOL_STATUS.COMPLETED
-
-    let completionDate = ''
-    if (isCompleted) {
-      const lastActivity = getSchoolLastActivityDate({ batchDocs, studentDocs, teacherDocs })
-      completionDate = lastActivity ? formatIsoDate(lastActivity) : ''
-    }
+    // completion_date/submission_date = this school's FIRST successful
+    // Student Feedback submission date — the earliest createdAt across ALL
+    // of its StudentFeedback docs (every grade, every tour), per client
+    // correction. Applied identically to every AFE row for this school
+    // (never a per-row/per-class date). No longer gated on overall school
+    // completion status — every school reaching this point already has at
+    // least one StudentFeedback doc (see the early-return above), so a
+    // first-submission date always exists here.
+    const firstStudentFeedbackDate = studentDocs.reduce((earliest, doc) => {
+      const createdAt = new Date(doc.createdAt)
+      return !earliest || createdAt < earliest ? createdAt : earliest
+    }, null)
+    const completionDate = firstStudentFeedbackDate ? formatIsoDate(firstStudentFeedbackDate) : ''
     const submissionDate = completionDate
 
     // Latest TeacherFeedback per tour represents that tour's current record

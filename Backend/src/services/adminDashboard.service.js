@@ -32,6 +32,7 @@ function buildTeacherFeedbackRow(doc) {
     submittedBy: doc.submittedBy,
     contactNumber: doc.contactNumber,
     email: doc.email || '',
+    grade: doc.grade || '',
     recommendScore: doc.recommendScore,
     satisfactionResources: doc.satisfactionResources,
     easeIntegration: doc.easeIntegration,

@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import { createTour } from '../../../services/toursData.service'
 import { getApiErrorMessage } from '../../../utils/apiErrorMessage'
 import { useLanguage } from '../../../hooks/useLanguage'
+import { useToast } from '../../../hooks/useToast'
 
 const INITIAL_FORM = { tourName: '', durationMinutes: '' }
 
@@ -15,6 +16,7 @@ const INITIAL_FORM = { tourName: '', durationMinutes: '' }
 // SetTargetPasswordModal.jsx already uses for its own password step.
 export default function AddTourModal({ isOpen, onClose, onCreated }) {
   const { t } = useLanguage()
+  const toast = useToast()
   const [step, setStep] = useState('details') // 'details' | 'password'
   const [form, setForm] = useState(INITIAL_FORM)
   const [formErrors, setFormErrors] = useState({})
@@ -71,6 +73,7 @@ export default function AddTourModal({ isOpen, onClose, onCreated }) {
       })
       resetAndClose()
       onCreated?.()
+      toast.success(t('export.tourManagement.createSuccess'))
     } catch (err) {
       if (err?.response?.status === 403) {
         setPasswordError(t('export.tourManagement.password.incorrect'))

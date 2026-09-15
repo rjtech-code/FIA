@@ -34,6 +34,17 @@ const schoolSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
+    // Teacher-set custom password (Teacher Dashboard -> Change Password).
+    // Kept separate from `password` (the default/UDISE-derived credential)
+    // so setting a custom password never invalidates the original
+    // UDISE-as-password login — comparePassword() checks this first, then
+    // falls back to `password`. Hashed the same way as `password` via the
+    // pre('save') hook below.
+    customPassword: {
+      type: String,
+      select: false,
+      default: null,
+    },
     // Running counter behind every Student Dummy ID generated for this
     // school (see utils/studentDummyId.js) — claimed atomically via $inc on
     // every new StudentFeedback submission, so the sequence is per-school,
@@ -74,11 +85,19 @@ const schoolSchema = new mongoose.Schema(
 // save flow, which never touches `password` at all). Matches the already-
 // correct pattern in superAdmin.model.js.
 schoolSchema.pre('save', async function hashPassword() {
-  if (!this.isModified('password') || !this.password) return
-  this.password = await bcrypt.hash(this.password, SALT_ROUNDS)
+  if (this.isModified('password') && this.password) {
+    this.password = await bcrypt.hash(this.password, SALT_ROUNDS)
+  }
+  if (this.isModified('customPassword') && this.customPassword) {
+    this.customPassword = await bcrypt.hash(this.customPassword, SALT_ROUNDS)
+  }
 })
 
 schoolSchema.methods.comparePassword = async function comparePassword(candidatePassword) {
+  if (this.customPassword) {
+    const matchesCustom = await bcrypt.compare(candidatePassword, this.customPassword)
+    if (matchesCustom) return true
+  }
   if (this.password) {
     return bcrypt.compare(candidatePassword, this.password)
   }

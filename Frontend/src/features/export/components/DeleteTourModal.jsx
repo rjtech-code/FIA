@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import { deleteTour } from '../../../services/toursData.service'
 import { getApiErrorMessage } from '../../../utils/apiErrorMessage'
 import { useLanguage } from '../../../hooks/useLanguage'
+import { useToast } from '../../../hooks/useToast'
 
 // Delete Tour -> Select Tour -> Click Delete -> Password Confirmation ->
 // Enter Super Admin Password -> Validate -> Delete. Works the same for the
@@ -14,6 +15,7 @@ import { useLanguage } from '../../../hooks/useLanguage'
 // touches feedback data already submitted for it.
 export default function DeleteTourModal({ isOpen, onClose, tours, onDeleted }) {
   const { t } = useLanguage()
+  const toast = useToast()
   const [step, setStep] = useState('select') // 'select' | 'password'
   const [tourId, setTourId] = useState('')
   const [tourError, setTourError] = useState('')
@@ -52,6 +54,7 @@ export default function DeleteTourModal({ isOpen, onClose, tours, onDeleted }) {
       await deleteTour(tourId, password)
       resetAndClose()
       onDeleted?.()
+      toast.success(t('export.tourManagement.deleteSuccess'))
     } catch (err) {
       if (err?.response?.status === 403) {
         setPasswordError(t('export.tourManagement.password.incorrect'))

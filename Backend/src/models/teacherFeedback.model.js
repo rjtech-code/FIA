@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { REQUIRED_GRADES } from '../services/schoolStatus.service.js'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -29,6 +30,13 @@ const teacherFeedbackSchema = new mongoose.Schema(
     month: { type: String, required: true },
     financialYear: { type: String, required: true },
 
+    // The teacher's own class/grade for this submission — teacher may pick
+    // ANY grade 6-12, not just their assigned class. Required going
+    // forward, but (same convention as `email` above) intentionally NOT
+    // backfilled onto older documents: those keep working with `grade`
+    // simply absent/undefined, never a fabricated value.
+    grade: { type: String, required: true, trim: true, enum: REQUIRED_GRADES },
+
     recommendScore: { type: Number, min: 0, max: 10, required: true },
     satisfactionResources: { type: Number, min: 1, max: 5, required: true },
     easeIntegration: { type: Number, min: 1, max: 5, required: true },
@@ -53,6 +61,7 @@ teacherFeedbackSchema.methods.toSafeJSON = function toSafeJSON() {
     email: this.email,
     month: this.month,
     financialYear: this.financialYear,
+    grade: this.grade,
     recommendScore: this.recommendScore,
     satisfactionResources: this.satisfactionResources,
     easeIntegration: this.easeIntegration,
