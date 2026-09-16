@@ -1,24 +1,26 @@
 import { StudentFeedbackBatch } from '../models/studentFeedbackBatch.model.js'
-import { ENABLED_TOURS } from '../constants/tours.js'
 import { GRADES } from '../constants/grades.js'
 import { getCurrentMonthName, getCurrentFinancialYear } from '../utils/academicPeriod.js'
 import { assertTeacherFeedbackCompleted } from './teacherStatus.service.js'
+import { getEligibleToursForSchool } from './tourEligibility.service.js'
 import { ApiError } from '../utils/ApiError.js'
 
-// Every Student Feedback batch now always covers every currently-enabled
-// Career Tour — teachers no longer choose which tours were shown, the
-// platform assumes every class watched all of them. This is the single
-// place that decides that, in ENABLED_TOURS' own canonical order (AWS ->
-// Robotics -> Music, then any Super-Admin-created tour after them), so no
-// caller/API needs to send (or can override) a tour selection.
+// Every Student Feedback batch now always covers every Career Tour this
+// school is ELIGIBLE for — teachers no longer choose which tours were
+// shown, the platform assumes every class watched all of them. This is the
+// single place that decides that, in the eligible list's own canonical
+// order (AWS -> Robotics -> Music, then any eligible custom tour after
+// them), so no caller/API needs to send (or can override) a tour selection.
+// A dynamic tour this school registered before is never included here, so
+// it can never end up on a batch/completion count for that school.
 //
-// Computed lazily (not a module-load-time constant) — ENABLED_TOURS is a
-// live, in-place-refreshed array (see constants/tours.js), so a tour
-// created/deleted after this module first loaded must be picked up on the
-// very next batch start, not frozen at whatever ENABLED_TOURS held at
-// import time.
-function getAllTours() {
-  return ENABLED_TOURS.map((tour) => ({ tourId: tour.tourId, tourName: tour.tourName }))
+// Computed lazily per-school (not a module-load-time constant) — the tour
+// catalog is a live, in-place-refreshed array (see constants/tours.js), so
+// a tour created/deleted after this module first loaded must be picked up
+// on the very next batch start, not frozen at whatever it held at import
+// time.
+function getAllTours(school) {
+  return getEligibleToursForSchool(school).map((tour) => ({ tourId: tour.tourId, tourName: tour.tourName }))
 }
 
 function unionTours(existingTours, incomingTours) {
@@ -54,7 +56,7 @@ export async function startStudentFeedbackBatch(school, { grade, studentCount, l
   // this school's Teacher Feedback has actually been completed — re-derived
   // from the database on every call, never trusted from whatever the UI
   // already gated on or bypassed.
-  await assertTeacherFeedbackCompleted(school._id)
+  await assertTeacherFeedbackCompleted(school)
 
   const normalizedGrade = String(grade ?? '').trim()
   if (!normalizedGrade || !GRADES.includes(normalizedGrade)) {
@@ -71,7 +73,7 @@ export async function startStudentFeedbackBatch(school, { grade, studentCount, l
 
   if (existing) {
     existing.studentCount += Number(studentCount)
-    existing.tours = unionTours(existing.tours, getAllTours())
+    existing.tours = unionTours(existing.tours, getAllTours(school))
     if (language) existing.language = language
     existing.month = month
     existing.financialYear = financialYear
@@ -85,7 +87,7 @@ export async function startStudentFeedbackBatch(school, { grade, studentCount, l
     schoolName: school.schoolName,
     grade: normalizedGrade,
     studentCount: Number(studentCount),
-    tours: getAllTours(),
+    tours: getAllTours(school),
     language: language || '',
     month,
     financialYear,

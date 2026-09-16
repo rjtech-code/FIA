@@ -79,16 +79,18 @@ function calculateItpForExport(scores) {
   return result === null ? '' : result
 }
 
-// educator_nps must be the teacher's ORIGINAL raw 0-10 rating for the AFE
-// CSV (Official) export specifically — per client correction, this is now a
-// deliberate exception to the platform's normal NPS methodology (calculated
-// % Promoters - % Detractors, see utils/nps.js / calculateNps), which
-// remains unchanged everywhere else in the app. Do NOT recalculate this
-// field, and do NOT apply the Teacher Feedback export's separate +1 display
-// transformation (see exportFormats.js) here — this must stay exactly what
-// the teacher selected.
+// educator_nps is the teacher's original 0-10 recommendScore rating +1
+// (e.g. 8 -> 9, 10 -> 11) for the AFE CSV (Official) export specifically —
+// per client requirement. Deliberately NOT clamped back to 10 — a teacher
+// who entered the maximum (10) must show as 11 here. This is purely a
+// display/export-time transformation: it must NOT touch the underlying
+// stored TeacherFeedback.recommendScore, which stays the teacher's original
+// raw rating everywhere else (Teacher Feedback page/export, School
+// Dashboard, NPS calculations, etc. — see exportFormats.js). Always read
+// straight from the source TeacherFeedback doc so re-generating the export
+// never compounds a second +1 on top of an already-transformed value.
 function educatorNpsForExport(teacherDoc) {
-  return teacherDoc ? teacherDoc.recommendScore : ''
+  return typeof teacherDoc?.recommendScore === 'number' ? teacherDoc.recommendScore + 1 : ''
 }
 
 function groupBySchool(docs) {

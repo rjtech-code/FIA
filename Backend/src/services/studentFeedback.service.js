@@ -3,6 +3,7 @@ import { StudentFeedback } from '../models/studentFeedback.model.js'
 import { StudentFeedbackBatch } from '../models/studentFeedbackBatch.model.js'
 import { TOUR_BY_ID } from '../constants/tours.js'
 import { computeGradeFeedbackProgress, assertTeacherFeedbackCompleted } from './teacherStatus.service.js'
+import { isTourEligibleForSchool } from './tourEligibility.service.js'
 import { computeRequiredFeedbackCount } from '../utils/studentFeedbackTarget.js'
 import { getTargetPercentForDistrict } from './districtFeedbackTarget.service.js'
 import { formatStudentDummyId } from '../utils/studentDummyId.js'
@@ -49,7 +50,7 @@ export async function submitStudentFeedback(school, { grade, tours }) {
   // Student Feedback is rejected until this school's Teacher Feedback has
   // actually been completed — re-derived from the database on every call,
   // never trusted from whatever the UI already gated on or bypassed.
-  await assertTeacherFeedbackCompleted(school._id)
+  await assertTeacherFeedbackCompleted(school)
 
   const normalizedGrade = String(grade ?? '').trim()
   if (!normalizedGrade) {
@@ -80,6 +81,13 @@ export async function submitStudentFeedback(school, { grade, tours }) {
   const tourAnswers = tours.map((answer) => {
     const tour = TOUR_BY_ID.get(answer.tourId)
     if (!tour) throw new ApiError(400, `Unknown tour: ${answer.tourId}`)
+    // Backend-enforced independent of the batch's own `tours` list (which
+    // was already built from only-eligible tours) — a direct API call can
+    // never submit Student Feedback for a dynamic tour this school isn't
+    // eligible for, even if the batch/UI never would have offered it.
+    if (!isTourEligibleForSchool(tour, school)) {
+      throw new ApiError(403, `This school is not eligible to submit feedback for tour: ${answer.tourId}`)
+    }
     return {
       tourId: tour.tourId,
       tourName: tour.tourName,

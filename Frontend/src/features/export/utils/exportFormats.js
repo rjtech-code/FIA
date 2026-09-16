@@ -103,18 +103,6 @@ function sortSchoolsForExport(schools) {
   }))
 }
 
-// The Teacher Feedback export/file displays the teacher's original 0-10
-// recommendScore rating +1 (e.g. 8 -> 9, 10 -> 11) — a display-only
-// transformation for this export specifically, per client requirement.
-// Deliberately NOT clamped back to 10 — a teacher who entered the maximum
-// (10) must show as 11 here, per spec. This must NOT touch the underlying
-// stored TeacherFeedback.recommendScore (which stays the teacher's original
-// raw rating everywhere else, including the AFE CSV (Official) export's
-// educator_nps — see Backend/src/services/afeExport.service.js).
-function displayTeacherRecommendScore(recommendScore) {
-  return typeof recommendScore === 'number' ? recommendScore + 1 : recommendScore
-}
-
 // District Code comes straight from the school's own backend-saved value
 // (school.districtCode, from Export Data -> Programme Setup -> Per-School
 // District Code & Postal Code) — never a browser-only/fake value, and never
@@ -203,7 +191,11 @@ export function buildFeedbackRows(schools, setup, unit, range, dynamicCodeMap) {
           'After watching the career tour how interested are you in learning more about careers of the future? (1 = Not at all interested to 5 = Very interested)': '',
           'Did the tour make you want to explore a career of the future for yourself?': '',
           'Would you like to see more tours like this?': '',
-          'On a scale of 0-10 how likely are you to recommend to this Tour to other teachers/schools?  (0-Not at all likely 10-Extremely likely)': displayTeacherRecommendScore(row.recommendScore),
+          // Original teacher-entered 0-10 rating, unchanged — the AFE CSV
+          // (Official) export applies its own separate +1 to educator_nps
+          // (see Backend/src/services/afeExport.service.js); this export
+          // must not.
+          'On a scale of 0-10 how likely are you to recommend to this Tour to other teachers/schools?  (0-Not at all likely 10-Extremely likely)': row.recommendScore,
           'How satisfied are you with the resources provided (Teacher Toolkit worksheets facilitation guide)?  (1 = Extremely dissatisfied to 5 = Extremely satisfied)': row.satisfactionResources,
           'How easy was it to integrate this tour into your classroom lesson plan? (1 = Extremely difficult to 5 = Extremely easy)': row.easeIntegration,
           'What was the biggest benefit for your students from this tour?': row.biggestBenefit || '',

@@ -70,7 +70,7 @@ function SubmittedSummary({ submissions, t }) {
             )}
             {first.grade && (
               <p className="mt-1">
-                <span className="font-semibold text-accent-300">{t('teacherFeedback.gradeLabel')}</span> {first.grade}
+                <span className="font-semibold text-accent-300">{t('teacherFeedback.gradeLabel')}:</span> {first.grade}
               </p>
             )}
             <p className="mt-1">

@@ -1,9 +1,10 @@
 import { TeacherFeedback } from '../models/teacherFeedback.model.js'
-import { TOUR_BY_ID, TOUR_IDS } from '../constants/tours.js'
+import { TOUR_BY_ID } from '../constants/tours.js'
 import { getCurrentMonthName, getCurrentFinancialYear } from '../utils/academicPeriod.js'
 import { ApiError } from '../utils/ApiError.js'
 import { sortByFeedbackHierarchy } from '../utils/feedbackSort.js'
 import { REQUIRED_GRADES } from './schoolStatus.service.js'
+import { getEligibleToursForSchool, isTourEligibleForSchool } from './tourEligibility.service.js'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -44,9 +45,14 @@ function normalizeGrade(grade) {
 }
 
 export async function submitTeacherFeedback(school, { submittedBy, contactNumber, email, grade, tours }) {
-  if (TOUR_IDS.length === 0) {
-    // Guards against a vacuous "successful" submission: with zero enabled
-    // tours, `tours.length !== TOUR_IDS.length` below would pass for an
+  // This school's own eligible tour set — core AWS/Robotics/Music always
+  // included, plus any dynamic tour created before this school registered.
+  // Never the raw global tour catalog: a school must submit feedback for
+  // exactly the tours IT is eligible for, not every tour that exists.
+  const eligibleTours = getEligibleToursForSchool(school)
+  if (eligibleTours.length === 0) {
+    // Guards against a vacuous "successful" submission: with zero eligible
+    // tours, `tours.length !== eligibleTours.length` below would pass for an
     // empty `tours` array too, letting a Name/Email-only submission
     // silently create zero feedback records and read back as "completed"
     // (0 records >= 0 required). Fail loudly instead — there is nothing
@@ -58,8 +64,8 @@ export async function submitTeacherFeedback(school, { submittedBy, contactNumber
   }
   const normalizedEmail = normalizeEmail(email)
   const normalizedGrade = normalizeGrade(grade)
-  if (!Array.isArray(tours) || tours.length !== TOUR_IDS.length) {
-    throw new ApiError(400, `Feedback for all ${TOUR_IDS.length} Career Tours is required.`)
+  if (!Array.isArray(tours) || tours.length !== eligibleTours.length) {
+    throw new ApiError(400, `Feedback for all ${eligibleTours.length} Career Tours is required.`)
   }
 
   const existingCount = await TeacherFeedback.countDocuments({ school: school._id })
@@ -74,6 +80,14 @@ export async function submitTeacherFeedback(school, { submittedBy, contactNumber
     const tour = TOUR_BY_ID.get(tourAnswer.tourId)
     if (!tour) {
       throw new ApiError(400, `Unknown tour: ${tourAnswer.tourId}`)
+    }
+    // Backend-enforced even though the frontend only ever offers eligible
+    // tours (via /teacher/meta) — never trust that a request's tourId was
+    // actually one this school was shown. This is what stops a tourId
+    // manually changed to 4 (or any request crafted outside the UI) from an
+    // ineligible school.
+    if (!isTourEligibleForSchool(tour, school)) {
+      throw new ApiError(403, `This school is not eligible to submit feedback for tour: ${tourAnswer.tourId}`)
     }
     return {
       school: school._id,

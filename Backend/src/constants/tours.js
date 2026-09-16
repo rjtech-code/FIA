@@ -62,6 +62,10 @@ export function setToursCatalog(dbTours) {
       enabled: true,
       code: tour.code,
       durationMinutes: tour.durationMinutes,
+      // Needed by services/tourEligibility.service.js: a dynamic tour
+      // (code >= 4) is only usable by schools registered AFTER this
+      // timestamp — see that module for the actual comparison.
+      createdAt: tour.createdAt,
     })),
     ...STATIC_DISABLED_TOURS,
   )
