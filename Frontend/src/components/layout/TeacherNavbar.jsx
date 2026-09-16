@@ -6,6 +6,7 @@ import ChangePasswordModal from '../../features/teacherDashboard/components/Chan
 import { useTeacherAuth } from '../../hooks/useTeacherAuth'
 import { useTeacherStatus } from '../../hooks/useTeacherStatus'
 import { useLanguage } from '../../hooks/useLanguage'
+import { useScrolled } from '../../hooks/useScrolled'
 import { TEACHER_ROUTES } from '../../utils/constants'
 
 function CheckIcon({ className = 'h-3.5 w-3.5' }) {
@@ -43,15 +44,22 @@ function KeyIcon({ className = 'h-4 w-4' }) {
   )
 }
 
-function ChangePasswordButton({ className = '', onClick, label }) {
+// `variant="dark"` for the solid-teal desktop header; default (light) for the
+// white mobile drawer.
+function ChangePasswordButton({ className = '', onClick, label, variant = 'light' }) {
+  const styles =
+    variant === 'dark'
+      ? 'border border-white/15 bg-white/10 text-white hover:bg-white/20 focus-visible:ring-white/60 focus-visible:ring-offset-brand-700'
+      : 'border border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-brand-500 focus-visible:ring-offset-2'
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-600
+      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold
         transition-colors duration-150 ease-out
-        hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
+        focus:outline-none focus-visible:ring-2
+        ${styles}
         ${className}`}
     >
       <KeyIcon />
@@ -76,36 +84,47 @@ function CloseIcon({ className = 'h-6 w-6' }) {
   )
 }
 
-function navLinkClassName({ isActive }) {
-  return `inline-flex h-10 items-center rounded-xl px-4 text-sm font-semibold whitespace-nowrap transition-colors duration-150 ease-out lg:px-5 ${
-    isActive
-      ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25'
-      : 'text-slate-500 hover:bg-brand-50 hover:text-brand-700'
-  }`
+// `dark` = solid-teal desktop header (light/white text); `light` = white
+// mobile drawer (dark text). Both share the same active/hover language.
+function navLinkClassName(variant) {
+  return ({ isActive }) => {
+    const base =
+      'inline-flex h-10 items-center rounded-xl px-4 text-sm font-semibold whitespace-nowrap transition-colors duration-150 ease-out lg:px-5'
+    if (variant === 'dark') {
+      return `${base} ${
+        isActive ? 'bg-accent-400 text-brand-900 shadow-md shadow-brand-950/20' : 'text-brand-100 hover:bg-white/10 hover:text-white'
+      }`
+    }
+    return `${base} ${isActive ? 'bg-accent-400 text-brand-900 shadow-sm' : 'text-slate-500 hover:bg-brand-50 hover:text-brand-700'}`
+  }
 }
 
-function DashboardTab({ onClick, label }) {
+function DashboardTab({ onClick, label, variant = 'dark' }) {
   return (
-    <NavLink to={TEACHER_ROUTES.DASHBOARD} onClick={onClick} className={navLinkClassName}>
+    <NavLink to={TEACHER_ROUTES.DASHBOARD} onClick={onClick} className={navLinkClassName(variant)}>
       {label}
     </NavLink>
   )
 }
 
-function WorkflowTab({ step, status, onClick, completePreviousStepLabel }) {
+function WorkflowTab({ step, status, onClick, completePreviousStepLabel, variant = 'dark' }) {
   const unlocked = step.isUnlocked(status)
   const completed = step.isCompleted(status)
 
   if (!unlocked) {
+    const lockedStyles =
+      variant === 'dark'
+        ? 'border border-white/10 bg-white/10 text-white/50'
+        : 'border border-slate-200 text-slate-400'
     return (
       <span
         role="link"
         aria-disabled="true"
         tabIndex={-1}
         title={completePreviousStepLabel}
-        className="group relative inline-flex h-10 cursor-not-allowed items-center gap-1.5 rounded-xl border border-slate-200 px-4 text-sm font-semibold whitespace-nowrap text-slate-400 opacity-60 lg:px-5"
+        className={`group relative inline-flex h-10 cursor-not-allowed items-center gap-1.5 rounded-xl px-4 text-sm font-semibold whitespace-nowrap lg:px-5 ${lockedStyles}`}
       >
-        <LockIcon className="h-3.5 w-3.5 text-accent-600" />
+        <LockIcon className="h-3.5 w-3.5 text-accent-400" />
         {step.label}
         <span className="pointer-events-none absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
           {completePreviousStepLabel}
@@ -115,10 +134,10 @@ function WorkflowTab({ step, status, onClick, completePreviousStepLabel }) {
   }
 
   return (
-    <NavLink to={step.to} onClick={onClick} className={navLinkClassName}>
+    <NavLink to={step.to} onClick={onClick} className={navLinkClassName(variant)}>
       <span className="inline-flex items-center gap-1.5">
         {completed && (
-          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-white">
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-completed-600 text-white">
             <CheckIcon className="h-2.5 w-2.5" />
           </span>
         )}
@@ -128,15 +147,17 @@ function WorkflowTab({ step, status, onClick, completePreviousStepLabel }) {
   )
 }
 
+// Same white-pill treatment as the Super Admin navbar's LogoutButton — reads
+// clearly on both the solid-teal desktop header and the white mobile drawer.
 function LogoutButton({ className = '', onClick, label }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-200 px-4 text-sm font-semibold text-red-600
+      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-100 bg-white/95 px-4 text-sm font-semibold text-red-600
         transition-colors duration-150 ease-out
         hover:border-red-600 hover:bg-red-600 hover:text-white
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2
         ${className}`}
     >
       <LogoutIcon />
@@ -150,6 +171,7 @@ export default function TeacherNavbar() {
   const { teacher, logout } = useTeacherAuth()
   const { status } = useTeacherStatus()
   const { t } = useLanguage()
+  const scrolled = useScrolled()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
 
@@ -187,18 +209,24 @@ export default function TeacherNavbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-brand-100 bg-brand-50/70 shadow-sm shadow-slate-900/[0.03] backdrop-blur-sm">
+      <header
+        className={`sticky z-40 transition-all duration-300 ease-out ${
+          scrolled
+            ? 'top-[5px] mx-[5px] rounded-2xl bg-brand-700/90 shadow-lg shadow-slate-900/20 backdrop-blur-md'
+            : 'top-0 mx-0 rounded-none bg-brand-700 shadow-sm shadow-slate-900/10'
+        }`}
+      >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8 xl:px-10">
           <Link to={TEACHER_ROUTES.DASHBOARD} className="flex min-w-0 items-center gap-3">
             <FiaLogo className="h-9 w-9 shrink-0 lg:h-10 lg:w-10" />
             <div className="hidden min-w-0 sm:block">
-              <p className="truncate text-sm font-semibold tracking-tight text-slate-900">{t('nav.teacherPortalTitle')}</p>
-              {teacher && <p className="truncate text-xs text-slate-400">{teacher.schoolName}</p>}
+              <p className="truncate text-sm font-semibold tracking-tight text-white">{t('nav.teacherPortalTitle')}</p>
+              {teacher && <p className="truncate text-xs text-brand-200">{teacher.schoolName}</p>}
             </div>
           </Link>
 
           <div className="hidden items-center md:flex lg:gap-2">
-            <nav className="flex items-center gap-1 rounded-2xl border border-brand-100/70 bg-white/60 p-1 lg:gap-1.5">
+            <nav className="flex items-center gap-1 rounded-2xl border border-white/10 bg-white/10 p-1 lg:gap-1.5">
               <DashboardTab label={t('nav.dashboard')} />
               {workflowSteps.map((step) => (
                 <WorkflowTab
@@ -210,11 +238,15 @@ export default function TeacherNavbar() {
               ))}
             </nav>
 
-            <div className="mx-3 hidden h-8 w-px bg-brand-100 lg:block" aria-hidden="true" />
+            <div className="mx-3 hidden h-8 w-px bg-white/15 lg:block" aria-hidden="true" />
 
             <div className="flex items-center gap-2 pl-3 lg:gap-3 lg:pl-0">
               <LanguageSwitcher />
-              <ChangePasswordButton onClick={() => setIsChangePasswordOpen(true)} label={t('nav.changePassword')} />
+              <ChangePasswordButton
+                variant="dark"
+                onClick={() => setIsChangePasswordOpen(true)}
+                label={t('nav.changePassword')}
+              />
               <LogoutButton onClick={handleLogout} label={t('nav.logout')} />
             </div>
           </div>
@@ -222,7 +254,7 @@ export default function TeacherNavbar() {
           <button
             type="button"
             onClick={() => setIsDrawerOpen(true)}
-            className="inline-flex items-center justify-center rounded-xl p-2 text-slate-600 transition-colors duration-150 hover:bg-slate-100 md:hidden"
+            className="inline-flex items-center justify-center rounded-xl p-2 text-white/90 transition-colors duration-150 hover:bg-white/10 md:hidden"
             aria-label={t('nav.openMenu')}
           >
             <MenuIcon />
@@ -259,7 +291,7 @@ export default function TeacherNavbar() {
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 p-4">
-          <DashboardTab onClick={closeDrawer} label={t('nav.dashboard')} />
+          <DashboardTab onClick={closeDrawer} label={t('nav.dashboard')} variant="light" />
           {workflowSteps.map((step) => (
             <WorkflowTab
               key={step.key}
@@ -267,6 +299,7 @@ export default function TeacherNavbar() {
               status={status}
               onClick={closeDrawer}
               completePreviousStepLabel={t('nav.completePreviousStep')}
+              variant="light"
             />
           ))}
         </nav>

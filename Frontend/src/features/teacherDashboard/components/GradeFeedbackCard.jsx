@@ -26,10 +26,10 @@ export default function GradeFeedbackCard({ grade, onStart }) {
   return (
     <div
       className={`animate-fade-in-up overflow-hidden rounded-2xl border shadow-sm shadow-slate-900/5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lg ${
-        grade.targetMet ? 'border-green-200' : 'border-slate-200/80'
+        grade.targetMet ? 'border-completed-200' : 'border-slate-200/80'
       }`}
     >
-      <div className={`px-5 py-4 text-white ${grade.targetMet ? 'bg-green-600' : 'bg-brand-600'}`}>
+      <div className={`px-5 py-4 text-white ${grade.targetMet ? 'bg-completed-600' : 'bg-brand-600'}`}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">
             {t('feedbackBatch.gradeLabel')} {grade.grade}
@@ -45,7 +45,7 @@ export default function GradeFeedbackCard({ grade, onStart }) {
         </p>
       </div>
 
-      <div className="bg-white p-5">
+      <div className={`p-5 ${grade.targetMet ? 'bg-completed-50/40' : 'bg-white'}`}>
         <div className="grid grid-cols-2 gap-y-3">
           <StatCell
             label={t('gradeFeedbackCard.required', { percent: Math.round(grade.targetPercent ?? 40) })}
@@ -59,14 +59,17 @@ export default function GradeFeedbackCard({ grade, onStart }) {
         <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
           <div
             className={`h-full rounded-full transition-all duration-500 ease-out ${
-              grade.targetMet ? 'bg-green-500' : 'bg-brand-600'
+              grade.targetMet ? 'bg-completed-500' : 'bg-accent-400'
             }`}
             style={{ width: `${progressPercent}%` }}
           />
         </div>
 
         {grade.targetMet ? (
-          <p className="mt-3 text-sm font-medium text-green-700">{t('gradeFeedbackCard.targetMetNote')}</p>
+          <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-completed-700">
+            <CheckIcon className="h-3.5 w-3.5" />
+            {t('gradeFeedbackCard.targetMetNote')}
+          </p>
         ) : (
           <button
             type="button"

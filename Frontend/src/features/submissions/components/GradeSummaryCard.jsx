@@ -1,20 +1,26 @@
 import { useLanguage } from '../../../hooks/useLanguage'
 
-function StatCell({ label, value, highlight = false }) {
+function StatCell({ label, value, highlightClassName }) {
   return (
     <div>
       <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">{label}</p>
-      <p className={`mt-0.5 text-base font-semibold ${highlight ? 'text-brand-600' : 'text-slate-900'}`}>{value}</p>
+      <p className={`mt-0.5 text-base font-semibold ${highlightClassName || 'text-slate-900'}`}>{value}</p>
     </div>
   )
 }
 
 export default function GradeSummaryCard({ card }) {
   const { t } = useLanguage()
+  const isComplete = card.completionPercentage >= 100
 
   return (
     <div className="animate-fade-in-up rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-900/10">
-      <p className="text-sm font-semibold text-slate-900">{t('submissions.gradeCard.title', { grade: card.grade })}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-slate-900">{t('submissions.gradeCard.title', { grade: card.grade })}</p>
+        {isComplete && (
+          <span className="h-2 w-2 shrink-0 rounded-full bg-completed-500" aria-hidden="true" />
+        )}
+      </div>
 
       <div className="mt-4 grid grid-cols-2 gap-y-3">
         <StatCell label={t('submissions.gradeCard.totalStudents')} value={card.totalStudents.toLocaleString()} />
@@ -26,14 +32,14 @@ export default function GradeSummaryCard({ card }) {
         <StatCell
           label={t('submissions.gradeCard.completion')}
           value={`${card.completionPercentage}%`}
-          highlight
+          highlightClassName={isComplete ? 'text-completed-700' : 'text-brand-600'}
         />
       </div>
 
       <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
         <div
-          className="h-full rounded-full bg-brand-600 transition-all duration-500 ease-out"
-          style={{ width: `${card.completionPercentage}%` }}
+          className={`h-full rounded-full transition-all duration-500 ease-out ${isComplete ? 'bg-completed-500' : 'bg-brand-600'}`}
+          style={{ width: `${Math.min(card.completionPercentage, 100)}%` }}
         />
       </div>
     </div>

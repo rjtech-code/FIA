@@ -5,10 +5,11 @@ export default function Footer({ label }) {
   const resolvedLabel = label ?? t('nav.adminPanelTitle')
 
   return (
-    <footer className="border-t border-brand-100 bg-brand-50/50">
+    <footer className="relative overflow-hidden bg-brand-700">
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-accent-400" aria-hidden="true" />
       <div className="mx-auto max-w-7xl px-4 py-5 text-center sm:px-6 lg:px-8">
-        <p className="text-xs text-slate-500">{t('footer.copyright', { label: resolvedLabel })}</p>
-        <p className="mt-0.5 text-xs text-slate-400">{t('footer.poweredBy')}</p>
+        <p className="text-xs font-medium text-white/90">{t('footer.copyright', { label: resolvedLabel })}</p>
+        <p className="mt-0.5 text-xs text-brand-200">{t('footer.poweredBy')}</p>
       </div>
     </footer>
   )

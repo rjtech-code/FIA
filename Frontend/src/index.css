@@ -31,6 +31,23 @@
   --color-accent-800: #89620f;
   --color-accent-900: #6a4c0c;
   --color-accent-950: #513a09;
+
+  /* Completed/success brand green (#177825) — the ONE green used across the
+     app for anything representing a finished/achieved state (completed
+     cards, badges, steps, success alerts). Replaces ad-hoc default Tailwind
+     green-* shades so completion never looks like a different, unrelated
+     color from the rest of the brand system. */
+  --color-completed-50: #eff8f0;
+  --color-completed-100: #dcf0df;
+  --color-completed-200: #b9e0c0;
+  --color-completed-300: #8fcb9c;
+  --color-completed-400: #5cae72;
+  --color-completed-500: #339154;
+  --color-completed-600: #177825;
+  --color-completed-700: #135f1e;
+  --color-completed-800: #0f4c18;
+  --color-completed-900: #0c3c13;
+  --color-completed-950: #07280d;
 }
 
 html,

@@ -41,7 +41,7 @@ export function CsatItpCard({ tour }) {
 }
 
 export function NpsCard({ tour }) {
-  const color = tour.nps == null ? 'text-slate-400' : tour.nps >= 50 ? 'text-green-600' : 'text-accent-700'
+  const color = tour.nps == null ? 'text-slate-400' : tour.nps >= 50 ? 'text-completed-600' : 'text-accent-700'
 
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-900/10">

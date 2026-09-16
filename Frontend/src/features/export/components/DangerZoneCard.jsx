@@ -109,7 +109,7 @@ export default function DangerZoneCard({ onDataCleared }) {
       </div>
 
       {message && (
-        <p className="mt-4 animate-fade-in-up text-sm font-medium text-green-700">{message}</p>
+        <p className="mt-4 animate-fade-in-up text-sm font-medium text-completed-700">{message}</p>
       )}
       {error && <p className="mt-4 animate-fade-in-up text-sm font-medium text-red-600">{error}</p>}
 

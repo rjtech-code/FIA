@@ -201,7 +201,7 @@ export default function PerSchoolExportCodesTable({ directoryVersion }) {
       </div>
 
       {successMessage && (
-        <p className="mb-3 animate-fade-in-up text-xs font-medium text-green-600">{successMessage}</p>
+        <p className="mb-3 animate-fade-in-up text-xs font-medium text-completed-600">{successMessage}</p>
       )}
 
       {isDirectoryLoading && !error ? (

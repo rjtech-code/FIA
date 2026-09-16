@@ -60,7 +60,7 @@ export default function ProgrammeSetupCard({ onSaved, directoryVersion }) {
       </div>
 
       {isSaved && (
-        <p className="mt-3 animate-fade-in-up text-xs font-medium text-green-600">
+        <p className="mt-3 animate-fade-in-up text-xs font-medium text-completed-600">
           {t('export.programmeSetup.savedNote')}
         </p>
       )}

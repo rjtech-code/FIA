@@ -41,10 +41,25 @@ export default function CompletedSchoolsSection() {
   ]
 
   return (
-    <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-900/5 sm:p-8">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight text-slate-900">{t('home.completed.title')}</h2>
-        <p className="mt-1.5 max-w-2xl text-sm text-slate-500">{t('home.completed.description')}</p>
+    <section className="animate-fade-in-up rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-900/5 sm:p-8">
+      <div className="flex items-start gap-3">
+        <span
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-completed-50 text-completed-600"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+            <path
+              d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            />
+            <path d="m8 12.5 2.5 2.5L16 9.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">{t('home.completed.title')}</h2>
+          <p className="mt-1.5 max-w-2xl text-sm text-slate-500">{t('home.completed.description')}</p>
+        </div>
       </div>
 
       {isLoading ? (
@@ -61,7 +76,7 @@ export default function CompletedSchoolsSection() {
               unused dead weight rather than something worth risking a
               wider refactor to remove. */}
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <SummaryCard label={t('home.completed.completedSchools')} value={summary.completedSchools} />
+            <SummaryCard accent label={t('home.completed.completedSchools')} value={summary.completedSchools} />
             <SummaryCard label={t('home.completed.totalResponses')} value={summary.totalResponses.toLocaleString()} />
             <SummaryCard label={t('home.completed.averageCsat')} value={summary.avgCsat.toFixed(1)} />
             <SummaryCard label={t('home.completed.averageNps')} value={`${summary.avgNps}%`} />

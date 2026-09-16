@@ -6,7 +6,7 @@ import { useLanguage } from '../../../hooks/useLanguage'
 
 function StatusPill({ status, t }) {
   const STATUS_PILL = {
-    registered: { label: t('export.summaryModal.statusLabels.registered'), className: 'bg-green-50 text-green-700 border-green-200' },
+    registered: { label: t('export.summaryModal.statusLabels.registered'), className: 'bg-completed-50 text-completed-700 border-completed-200' },
     duplicate: { label: t('export.summaryModal.statusLabels.duplicate'), className: 'bg-red-50 text-red-700 border-red-200' },
     'invalid-udise': { label: t('export.summaryModal.statusLabels.invalidUdise'), className: 'bg-amber-50 text-amber-700 border-amber-200' },
     invalid: { label: t('export.summaryModal.statusLabels.invalid'), className: 'bg-orange-50 text-orange-700 border-orange-200' },
@@ -123,7 +123,7 @@ export default function UploadSummaryModal({ isOpen, onClose, summary }) {
               icon="✅"
               label={t('export.summaryModal.successfullyRegistered')}
               value={summary.success}
-              accentClassName="border-t-4 border-t-green-400 border-slate-200"
+              accentClassName="border-t-4 border-t-completed-500 border-slate-200"
             />
             <StatCard
               icon="❌"

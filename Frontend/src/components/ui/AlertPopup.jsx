@@ -32,7 +32,7 @@ function WarningIcon({ className }) {
 }
 
 const VARIANTS = {
-  success: { headerBg: 'bg-green-50', iconBg: 'bg-green-100', iconColor: 'text-green-600', Icon: CheckIcon },
+  success: { headerBg: 'bg-completed-50', iconBg: 'bg-completed-100', iconColor: 'text-completed-600', Icon: CheckIcon },
   error: { headerBg: 'bg-red-50', iconBg: 'bg-red-100', iconColor: 'text-red-600', Icon: ErrorIcon },
   warning: { headerBg: 'bg-accent-50', iconBg: 'bg-accent-100', iconColor: 'text-accent-700', Icon: WarningIcon },
 }

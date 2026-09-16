@@ -260,7 +260,7 @@ export default function ExportPreviewCard({ directoryVersion }) {
           <span className="text-xs font-medium text-slate-500">{t('export.exportPreview.afePreparing')}</span>
         )}
         {afeDownloadStatus === 'ready' && (
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-completed-600">
             <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent-400" />
             {t('export.exportPreview.afeReady')}
           </span>

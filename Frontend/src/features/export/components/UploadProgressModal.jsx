@@ -42,7 +42,7 @@ export default function UploadProgressModal({ isOpen, isComplete }) {
     <Modal isOpen={isOpen} onClose={() => {}} closeOnBackdrop={false} showCloseButton={false} size="sm">
       <div className="p-8 text-center">
         {isComplete ? (
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-completed-100 text-completed-600">
             <CheckIcon />
           </div>
         ) : (
@@ -54,7 +54,7 @@ export default function UploadProgressModal({ isOpen, isComplete }) {
         <div className="mt-6 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
           <div
             className={`h-full rounded-full transition-all duration-500 ease-out ${
-              isComplete ? 'bg-green-500' : 'bg-brand-600'
+              isComplete ? 'bg-completed-500' : 'bg-accent-400'
             }`}
             style={{ width: `${progressPercent}%` }}
           />

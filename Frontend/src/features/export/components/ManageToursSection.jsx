@@ -50,7 +50,7 @@ export default function ManageToursSection() {
         </div>
       </div>
 
-      {message && <p className="mt-3 animate-fade-in-up text-xs font-medium text-green-600">{message}</p>}
+      {message && <p className="mt-3 animate-fade-in-up text-xs font-medium text-completed-600">{message}</p>}
 
       <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200">
         <table className="w-full border-collapse text-left text-sm">

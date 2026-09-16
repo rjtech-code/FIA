@@ -1,7 +1,7 @@
 import { useLanguage } from '../../hooks/useLanguage'
 
 const STATUS_STYLES = {
-  Completed: 'bg-green-50 text-green-700 border-green-200',
+  Completed: 'bg-completed-50 text-completed-700 border-completed-200',
   Pending: 'bg-accent-50 text-accent-800 border-accent-200',
   'Not Started': 'bg-slate-100 text-slate-500 border-slate-200',
   'In Progress': 'bg-brand-50 text-brand-700 border-brand-200',

@@ -27,7 +27,7 @@ export default function WorkflowStepper({ currentStep, completedSteps = [] }) {
             <div
               className={`flex h-7 w-7 flex-none items-center justify-center rounded-full text-xs font-semibold transition-colors duration-150 ${
                 isCompleted
-                  ? 'bg-green-500 text-white'
+                  ? 'bg-completed-600 text-white'
                   : isCurrent
                     ? 'bg-brand-600 text-white'
                     : 'bg-slate-100 text-slate-400'

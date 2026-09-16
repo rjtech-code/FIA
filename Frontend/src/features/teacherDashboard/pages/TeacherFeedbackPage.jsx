@@ -45,7 +45,7 @@ function SubmittedSummary({ submissions, t }) {
   return (
     <>
       <div className="animate-fade-in-up rounded-3xl bg-linear-to-br from-slate-800 to-slate-950 p-6 text-center text-white shadow-xl shadow-slate-900/20 sm:p-8">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-green-500">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-completed-600">
           <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7 text-white" aria-hidden="true">
             <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

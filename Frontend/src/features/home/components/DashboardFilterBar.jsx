@@ -14,8 +14,16 @@ function FilterIcon({ className = 'h-4 w-4' }) {
   )
 }
 
+function ClearIcon({ className = 'h-3.5 w-3.5' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 const SELECT_CLASSES =
-  'rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-all duration-150 ease-out focus:border-brand-400 focus:ring-4 focus:ring-brand-100 focus:outline-none'
+  'rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-all duration-150 ease-out hover:border-slate-300 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 focus:outline-none'
 
 export default function DashboardFilterBar({ options, filters, onFilterChange, onClear, resultLabel }) {
   const { t } = useLanguage()
@@ -72,8 +80,9 @@ export default function DashboardFilterBar({ options, filters, onFilterChange, o
           <button
             type="button"
             onClick={onClear}
-            className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors duration-150 hover:text-slate-800"
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-slate-500 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-800"
           >
+            <ClearIcon />
             {t('home.filter.clear')}
           </button>
         )}

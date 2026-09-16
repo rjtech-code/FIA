@@ -41,7 +41,7 @@ function InfoIcon({ className }) {
 }
 
 const VARIANTS = {
-  success: { iconBg: 'bg-green-100', iconColor: 'text-green-600', border: 'border-l-green-500', Icon: CheckIcon },
+  success: { iconBg: 'bg-completed-100', iconColor: 'text-completed-600', border: 'border-l-completed-500', Icon: CheckIcon },
   error: { iconBg: 'bg-red-100', iconColor: 'text-red-600', border: 'border-l-red-500', Icon: ErrorIcon },
   warning: { iconBg: 'bg-accent-100', iconColor: 'text-accent-700', border: 'border-l-accent-400', Icon: WarningIcon },
   info: { iconBg: 'bg-brand-100', iconColor: 'text-brand-700', border: 'border-l-brand-500', Icon: InfoIcon },

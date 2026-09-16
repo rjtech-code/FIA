@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import DashboardTable from '../../../components/table/DashboardTable'
 import Spinner from '../../../components/ui/Spinner'
 import AlertPopup from '../../../components/ui/AlertPopup'
+import Button from '../../../components/ui/Button'
 import { downloadSchoolListTemplate } from '../utils/schoolListExcel'
 import { fetchSchoolsRequest, uploadSchoolListRequest } from '../../../api/schools.api'
 import { useLanguage } from '../../../hooks/useLanguage'
@@ -36,6 +37,28 @@ function UploadIcon({ className = 'h-4 w-4' }) {
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       <path
         d="M12 15V3m0 0l-4 4m4-4l4 4M5 21h14"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function CheckIcon({ className = 'h-3.5 w-3.5' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function InfoIcon({ className = 'h-3.5 w-3.5' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M12 16v-4m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
@@ -147,24 +170,18 @@ export default function SchoolManagementCard({ directoryVersion, onDirectoryChan
         </div>
 
         <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            onClick={downloadSchoolListTemplate}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700
-              transition-all duration-200 ease-out hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
-          >
-            <DownloadIcon />
-            {t('export.schoolManagement.downloadTemplate')}
-          </button>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white
-              transition-all duration-200 ease-out hover:bg-brand-700 hover:shadow-md hover:shadow-brand-900/20"
-          >
-            <UploadIcon />
-            {t('export.schoolManagement.uploadSchoolList')}
-          </button>
+          <Button type="button" variant="secondary" onClick={downloadSchoolListTemplate} className="w-auto!">
+            <span className="inline-flex items-center gap-2">
+              <DownloadIcon />
+              {t('export.schoolManagement.downloadTemplate')}
+            </span>
+          </Button>
+          <Button type="button" variant="primary" onClick={() => fileInputRef.current?.click()} className="w-auto!">
+            <span className="inline-flex items-center gap-2">
+              <UploadIcon />
+              {t('export.schoolManagement.uploadSchoolList')}
+            </span>
+          </Button>
           <input
             ref={fileInputRef}
             type="file"

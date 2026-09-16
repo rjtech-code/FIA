@@ -58,18 +58,34 @@ export default function SubmissionsPage() {
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <SummaryCard accent label={t('submissions.totalStudentFeedback')} value={summary.totalStudentFeedback} />
-            <SummaryCard accent label={t('submissions.teacherResponses')} value={summary.teacherResponses} />
-            <SummaryCard accent label={t('submissions.avgCsat')} value={summary.avgCsat.toFixed(2)} />
+            <SummaryCard label={t('submissions.teacherResponses')} value={summary.teacherResponses} />
+            <SummaryCard label={t('submissions.avgCsat')} value={summary.avgCsat.toFixed(2)} />
           </div>
 
-          <div className="mt-6">
-            <p className="mb-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+          <div className="mt-6 animate-fade-in-up rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-900/5 sm:p-8">
+            <p className="flex items-center gap-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
               {t('submissions.feedbackByGrade')}
             </p>
             {gradeCards.length === 0 ? (
-              <p className="text-sm text-slate-400">{t('submissions.noGradeData')}</p>
+              <div className="mt-4 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-200 py-12 text-center">
+                <span
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400"
+                  aria-hidden="true"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+                    <path
+                      d="M4 19.5V6a2 2 0 0 1 2-2h9l5 5v10.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5Z"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <p className="text-sm text-slate-400">{t('submissions.noGradeData')}</p>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {gradeCards.map((card) => (
                   <GradeSummaryCard key={card.grade} card={card} />
                 ))}
@@ -77,7 +93,7 @@ export default function SubmissionsPage() {
             )}
           </div>
 
-          <div className="mt-6 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-900/5 sm:p-8">
+          <div className="mt-6 animate-fade-in-up rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-900/5 sm:p-8">
             <DashboardTable
               columns={columns}
               data={rows}
